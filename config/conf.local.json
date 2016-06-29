@@ -1,0 +1,24 @@
+{
+  "domain": "localhost",
+  "urlSuf": "",
+  "port": 5555,
+  "adminPhone": "380636284343",
+  "mongoose": {
+    "url": "mongodb://127.0.0.1/mvshop_dev",
+    "options": {
+      "server": {
+        "socketOptions": {
+          "keepAlive": 1
+        }
+      }
+    }
+  },
+  "apiCode": {
+    "error": 500,
+    "success": 200
+  },
+  "mm": {
+    "host": "localhost",
+    "db": "mvshop_dev"
+  }
+}

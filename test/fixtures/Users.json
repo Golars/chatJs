@@ -1,0 +1,19 @@
+{
+  "admin" : {
+    "uid": 9308280,
+    "token": "9275d1e6875dd68999f5975e5d6ce906dbbb441c0426176b55a3756acba2a9686a284e4a70f2cb01c6dfd",
+    "first_name": "Вася",
+    "last_name": "Пупкин",
+    "sex": 2,
+    "email": "titorens@gmail.com",
+    "bdate": "01.01.1001",
+    "deactivated": 0,
+    "city_id": 1,
+    "country_id": 1,
+    "photo_max_orig": "http://vk.com/images/camera_b.gif"
+  },
+  "friend" : {
+    "phone"       : "380636284344",
+    "name"        : "friend"
+  }
+}

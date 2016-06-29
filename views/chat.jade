@@ -1,0 +1,191 @@
+doctype html
+html
+    head
+        title=Chat
+        link(rel='stylesheet', href='/stylesheets/style.css')
+        link(rel='styleSheet', href='/css/bootstrap.min.css')
+        link(rel='styleSheet', href='/css/bootstrap-theme.min.css')
+        link(rel='styleSheet', href='/css/sweet-alert.css')
+        script(src='/js/socket.io.js')
+        script(src='/js/jquery-1.11.1.min.js')
+        script(src='/js/bootstrap.min.js')
+        script(src='/js/sweet-alert.min.js')
+        script(src='/js/buzz.min.js')
+        script(src='/js/pbkdf2.js')
+        script(src='//vk.com/js/api/openapi.js')
+    body
+        h1= message
+        strong Status
+        #status Disconect
+        div(class="row")
+            div(class="col-md-3")
+            div(class="col-md-6")
+                div(class="panel panel-body")
+                    form(id="authForm", class="form", onsubmit="return false;")
+                        div(class="form-group")
+                            label Login
+                        span(id='vk', class="btn btn-info") Login Vk
+                h1 Чаты
+                ul(id="chats" class="nav nav-divider text-center")
+            div(class="col-md-3")
+        script(src='/js/main.js')
+        script.
+            var mySound = new buzz.sound("/sound/win", {
+                formats: ["mp3"]
+            });
+            mySound.setVolume(100);
+            var sendSound = new buzz.sound("/sound/send", {
+                formats: ["mp3"],
+            });
+            sendSound.setVolume(100);
+            //sendSound.toTimer(buzz.fromTimer("00:05"));
+
+            $(document).on('click', '#auth', function (e) {
+                var phone = $(document).find('input#phone').val();
+                if (phone.length < 10) {
+                    return sweetAlert('Phone error', "You Need write minimum 10 numbers in phone number", "error");
+                }
+            });
+
+            socket.on('activate', function(data) {
+                if(data.error !== undefined) {
+                    return sweetAlert('Server Error!', data.message, "error");
+                }
+
+                token = data.token;
+                user = data.user;
+
+                socket.user = data.user;
+                $("#authForm").slideUp(500);
+                socket.emit('chat.getAll');
+                return sweetAlert('Hello, gear ' + user.name + '!', "You have privileges to using Qarts. And You love O'Brain", "success");
+            });
+            socket.on('chat.getAll', function(data){
+                if (data.error !== undefined) {
+                    return sweetAlert('Server Error!', data.message, "error");
+                }
+
+                if(data.chats == undefined) {
+                    return sweetAlert("You don't have any chat", "Please create new chat!", "warning");
+                }
+
+                var chatEl = $('ul#chats');
+
+                data.chats.forEach(function(chat) {
+                    var name = [];
+                    if(!chat.name.length) {
+                        chat.users.forEach(function(model){
+                            name.push(model.user.name);
+                        })
+                    } else {
+                        name.push(chat.name);
+                    }
+
+                    var imageChat = (chat.url_image) ? '<img width="100%" class="thumbnail" src="' + chat.url_image + '">' : '';
+                   chatEl.append('<li>' +
+                   '<div class="panel panel-primary">' +
+                       '<div class="panel-heading chatTop">' +
+                            '<h3><a ref="'+ chat.id +'" class="chat_el label">' + name.join(', @') + '</a></h3>' +
+                       '</div>' +
+                       '<div class="panel-body" style="display: none">' +
+                            imageChat +
+                            '<div class="input-group input-group-lg">' +
+                                '<span class="input-group-addon" id="sizing-addon1"> Message</span>' +
+                                '<input type="text" class="form-control" placeholder="Message" aria-describedby="sizing-addon1">' +
+                                '<span class="send input-group-addon btn btn-success" ref="' + chat.id + '">Send</span>' +
+                            '</div>' +
+                        '</div>' +
+                       '<div style="display: none" class="messages_' + chat.id + ' panel-footer"></div>' +
+                   '</div></li>');
+                });
+
+                $(document).on('click', '.chatTop', function () {
+                    $(this).parent().find(".panel-body").toggle();
+                    $(this).parent().find(".panel-footer").toggle();
+                })
+                $(document).on('click', '.chat_el', function (e) {
+                    var chatId = $(e.target).attr("ref");
+                    if (chats[chatId] !== undefined && chats[chatId]) {
+                        return socket.emit('enterToChat', {id: socket.inChat});
+                    }
+                    socket.inChat = chatId;
+                    socket.emit('chat.getOne', {id : socket.inChat});
+                });
+                $(document).on('click', '.send', function (e) {
+                    var message = $(this).parent().find("input").val();
+                    var chatId = $(e.target).attr("ref");
+                    var id = (new Date()).valueOf().toString()/1000;
+                    var data = {id:id, message: message, dt_create: $.now()};
+                    $(".messages_" + chatId).prepend('<p class="text-right">' + user.name + ' : ' + (new Date()).toLocaleDateString()+ ' ' + (new Date()).toLocaleTimeString() + '</p>' +
+                    '<p id="' + data.id + '" class="text-right text-info">' + data.message + '</p>');
+                    socket.emit('createMessage', data);
+                    $(this).parent().find("input").val('');
+                    sendSound.play().fadeIn();
+                })
+
+                $('.nav input').each(function(el) {
+                    if(el == undefined) {
+                        return;
+                    }
+                    this.onkeydown = function (e) {
+                        if (e.which == 13 && !e.ctrlKey && !e.shiftKey) {
+                            $($(this).parent().find('.send')[0]).trigger('click');
+                        }
+                    }
+                })
+            });
+
+            socket.on('createMessage', function(data){
+                if (data.error !== undefined) {
+                    return sweetAlert('Server Error!', data.message, "error");
+                }
+
+                $("#" + data.old_id).removeClass('text-info').addClass('text-success');
+            })
+            socket.on('userIsWrite', function (data) {
+            })
+            socket.on('newMessage', function(data){
+                if (data.error !== undefined) {
+                    return sweetAlert('Server Error!', data.message, "error");
+                }
+
+                var date = new Date(data.message.dt_create * 1000);
+                $(".messages_" + data.chat.id).prepend('<p class="text-left">' + data.message.user.name + ' : ' + date.toLocaleDateString()+ ' ' + date.toLocaleTimeString() + '</p><p id="' + data.message.id + '" class="text-left">' + data.message.obj + '</p>');
+                mySound.play().fadeIn();
+            })
+            socket.on('errorGlobal', function(data) {
+                return sweetAlert('Global Error!', data.message, "error");
+            })
+            var messageT = function (data) {
+                console.log('123',data);
+                var classCss = (data.user_id != user.id) ? 'text-left' : 'text-right';
+                var date = new Date(data.dt_create);
+                return '<p class="' + classCss + '">' + data.user.name + ' : ' + date.toLocaleDateString()+ ' ' + date.toLocaleTimeString() + '</p>' +
+                        '<p id="' + data.id + '" class="' + classCss + '">' + data.obj + '</p>';
+            }
+            socket.on('chat.getOne', function(data) {
+                if (data.error !== undefined) {
+                    return sweetAlert('Server Error!', data.message, "error");
+                }
+                if (data.chat == undefined) {
+                    return sweetAlert("You don't have this chat", "Please check the id chat!", "warning");
+                }
+                var el = $(".messages_" + data.chat.id);
+                chats[data.chat.id] = (chats[data.chat.id] == undefined) ? {model: data.chat, el: el} : chats[data.chat.id];
+
+                data.chat.messages.forEach(function(message){
+                    chats[data.chat.id].el.prepend(messageT(message));
+                })
+            });
+
+            socket.on('connect', function(){
+                if(!token) return;
+                socket.emit('checkToken', {"token": token});
+            })
+
+            socket.on('checkToken', function(data){
+                if(!data.code) {
+                    return sweetAlert('Error', 'Token is invalid', "error");
+                }
+                return socket.emit('enterToChat', {id: socket.inChat});
+            })

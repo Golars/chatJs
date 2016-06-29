@@ -1,0 +1,29 @@
+{
+  "domain": "localhost",
+  "urlSuf": "/",
+  "port": 5555,
+  "adminPhone": "380636284343",
+  "mongoose": {
+    "url": "mongodb://localhost/mvshop",
+    "options": {
+      "server": {
+        "socketOptions": {
+          "keepAlive": 1
+        }
+      }
+    }
+  },
+  "apiCode": {
+    "error": 500,
+    "success": 200
+  },
+  "mm": {
+    "host": "localhost",
+    "db": "mvshop"
+  },
+  "vk": {
+    "id": 5523900,
+    "secret": "x7pRWUvJFNk48UQs1VTK",
+    "version": "5.50"
+  }
+}

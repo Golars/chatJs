@@ -1,0 +1,702 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "This is a documentation for back-end. Need to use Socket.IO 1.0 or more.<br><h2>API Methods:</h2> <p class=\"NAWS\"><b>NAWS</b> - Not Active Web Socket( Don't need to activate WS)</p><p class=\"AWS\"><b>AWS</b> - Ned Active Web Socket</p><p class=\"SEvent\"><b>SEvent</b>  <b>POST</b> - Server Event</p>",
+    "version": "0.1.1",
+    "title": "Birka Api",
+    "termsOfService": "",
+    "contact": {"email": "titorens@gmail.com"},
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "host": "localhost:1993",
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "Base",
+      "description": "Base methods"
+    },
+    {
+      "name": "Auth",
+      "description": "Auth methods"
+    },
+    {
+      "name": "User",
+      "description": "Users methods"
+    }
+  ],
+  "schemes": ["ws"],
+  "paths": {
+    "auth": {
+      "NAWS": {
+        "tags": ["Auth"],
+        "summary": "User auth in socket",
+        "description": "Auth/Register user. Auth user. If user is not register -> register. ACTIVE Socket connection.",
+        "operationId": "User auth",
+        "parameters": [
+          {
+            "name": "uid",
+            "in": "query",
+            "description": "User vk ID",
+            "required": "true",
+            "type" : "integer"
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "description": "User vk access_token",
+            "required": "true",
+            "type" : "string"
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "description": "email",
+            "required": "true",
+            "type" : "string"
+          },
+          {
+            "name": "expires",
+            "in": "query",
+            "description": "Expires. Life of token ms",
+            "type" : "integer",
+            "default" : 0
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "<b>Data is invalid.</b> (Uid, token or email empty)",
+            "schema": {"$ref": "#/definitions/ApiErrorResponse"}
+          },
+          "200": {
+            "description": "User is auth",
+            "schema": { "$ref": "#/definitions/birkaToken"}
+          }
+        }
+      }
+    },
+    "checkToken": {
+      "NAWS": {
+        "tags": ["Auth"],
+        "summary": "Auth by uid and token. Check user Token. <b>( TEMP )<b/>",
+        "description": "Check user and active WS. If user uid and token is active then activate socket connection.",
+        "operationId": "Check user Token",
+        "parameters": [
+          {
+            "name": "uid",
+            "in": "query",
+            "description": "идентификатор пользователя. положительное число",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "User is not auth",
+            "schema": {"$ref": "#/definitions/ApiErrorResponse"}
+          },
+          "404": {
+            "description": "Uid or token is empty",
+            "schema": {"$ref": "#/definitions/ApiErrorResponse"}
+          },
+          "200": {
+            "description": "Successful operation",
+            "schema": {"$ref": "#/definitions/birkaToken"}
+          }
+        }
+      }
+    },
+    "updateToken": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Server send Event to Update User Token.",
+        "description": "Update user Token. Server send event to client.",
+        "operationId": "Update user Token.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "schema": {"$ref": "#/definitions/updateToken"}
+          },
+          "400": {
+            "description": "<b>Data is save.</b>",
+            "schema": {"$ref": "#/definitions/ApiErrorResponse"}
+          },
+          "401": {
+            "description": "<b>First you need to activate WS connect</b>",
+            "schema": {"$ref": "#/definitions/ApiGlobalErrorResponse"}
+          },
+          "404": {
+            "description": "<b>Token is empty.</b>",
+            "schema": {"$ref": "#/definitions/ApiErrorResponse"}
+          }
+        }
+      },
+      "AWS": {
+        "tags": ["Auth"],
+        "summary": "Update Token",
+        "description": "Set new user Token",
+        "operationId": "Set new user Token",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "description": "This is user token.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "schema": {"$ref": "#/definitions/ApiSimpleResponse"}
+          }
+        }
+      }
+    },
+    "recoveryConnection": {
+      "NAWS": {
+        "tags": ["Auth"],
+        "summary": "Auth by Birka Token. Check user Birka Token.",
+        "description": "Check user and active WS. If Birka Token is active then activate socket connection.",
+        "operationId": "Check user Birka Token",
+        "parameters": [
+          {
+            "name": "birka_token",
+            "in": "query",
+            "description": "Birka Access Token",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Birka Token is invalid",
+            "schema": {"$ref": "#/definitions/ApiErrorResponse"}
+          },
+          "404": {
+            "description": "Birka Token is empty",
+            "schema": {"$ref": "#/definitions/ApiErrorResponse"}
+          },
+          "200": {
+            "description": "Successful operation",
+            "schema": {"$ref": "#/definitions/ApiSimpleResponse"}
+          }
+        }
+      }
+    },
+    "testCrypt": {
+      "NAWS": {
+        "tags": ["Base"],
+        "summary": "Test simple crypt",
+        "description": "Using Lib.",
+        "operationId": "Test Crypt",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "description": "Encrypt Use lib Crypto.",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "schema": {"$ref": "#/definitions/testCrypt"}
+          }
+        }
+      }
+    },
+    "errorGlobal": {
+      "SEvent": {
+        "tags": ["Base"],
+        "summary": "Base error",
+        "description": "Base global Error",
+        "operationId": "Error Global",
+        "responses": {
+          "400": {
+            "description": "Error",
+            "schema": {"$ref": "#/definitions/ApiGlobalErrorResponse"}
+          }
+        }
+      }
+    },
+    "user.me": {
+      "AWS": {
+        "tags": ["User"],
+        "summary": "User info",
+        "description": "Show User Info",
+        "operationId": "User info",
+        "responses": {
+          "errorGlobal": {
+            "description": "Error",
+            "schema": {"$ref": "#/definitions/ApiGlobalErrorResponse"}
+          },
+          "200": {
+            "description": "Successful operation",
+            "schema": {"$ref": "#/definitions/User"}
+          }
+        }
+      }
+    },
+    "user.info": {
+      "AWS": {
+        "tags": ["User"],
+        "summary": "User info",
+        "description": "Show User Info",
+        "operationId": "User info",
+        "parameters": [
+          {
+            "name": "user_uid",
+            "in": "query",
+            "description": "идентификатор пользователя. положительное число",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "errorGlobal": {
+            "description": "Error",
+            "schema": {"$ref": "#/definitions/ApiGlobalErrorResponse"}
+          },
+          "200": {
+            "description": "Successful operation",
+            "schema": {"$ref": "#/definitions/UserInfo"}
+          }
+        }
+      }
+    },
+    "user.friends": {
+      "AWS": {
+        "tags": ["User"],
+        "summary": "User friends",
+        "description": "Show User friends",
+        "operationId": "User friends",
+        "responses": {
+          "errorGlobal": {
+            "description": "Error",
+            "schema": {"$ref": "#/definitions/ApiGlobalErrorResponse"}
+          },
+          "200": {
+            "description": "Successful operation",
+            "schema": {"$ref": "#/definitions/friends"}
+          }
+        }
+      }
+    },
+    "user.shops": {
+      "AWS": {
+        "tags": ["User"],
+        "summary": "User shops",
+        "description": "Show User shops",
+        "operationId": "User shops",
+        "responses": {
+          "errorGlobal": {
+            "description": "Error",
+            "schema": {"$ref": "#/definitions/ApiGlobalErrorResponse"}
+          },
+          "200": {
+            "description": "Successful operation",
+            "schema": {"$ref": "#/definitions/shops"}
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "activate": {
+      "type": "object",
+      "properties": {
+        "user": {"$ref": "#/definitions/userShortInfo"},
+        "token": {
+          "type": "string"
+        },
+        "status" : {
+          "type" : "integer",
+          "enum" : [200,201],
+          "default" : 200
+        }
+      },
+      "xml": {"name": "activate"}
+    },
+    "ApiErrorResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "integer",
+          "format": "int32",
+          "default" : 400,
+          "enum" : [304,400,401,403,404,500]
+        },
+        "error": {"type": "string"}
+      },
+      "example": {
+        "status": 400,
+        "error" : "{Error message}"
+      }
+    },
+    "ApiGlobalErrorResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "integer",
+          "format": "int32",
+          "defaultValue" : 401
+        },
+        "error": {
+          "type": "string",
+          "enum": [
+            "First you need to activate WS connect"
+          ]
+        }
+      }
+    },
+    "ApiSimpleResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "integer",
+          "description": "integer def 200 - OK",
+          "default" : 200
+        }
+      },
+      "example": {
+        "status": 200
+      }
+    },
+    "testCrypt": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Encrypt data from client.",
+          "default" : ""
+        },
+        "decode": {
+          "type": "string",
+          "description": "Decode Code use Crypto lib. Leb get from admin.",
+          "default" : ""
+        }
+      },
+      "example": {
+        "decode": "{CODE}",
+        "code": "{DECODE}",
+        "status": 200
+      }
+    },
+    "birkaToken": {
+      "type": "object",
+      "properties": {
+        "birka_token": {
+          "type": "string",
+          "description": "Encrypt data from client.",
+          "default" : ""
+        }
+      },
+      "example": {
+        "birka_token": "{birka_token}",
+        "status": 200
+      }
+    },
+    "User": {
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "integer",
+          "required": "true",
+          "description": "идентификатор пользователя. положительное число"
+        },
+        "first_name": {
+          "type": "string",
+          "required": "true",
+          "description": "имя пользователя"
+        },
+        "last_name": {
+          "type": "string",
+          "required": "true",
+          "description": "фамилия пользователя"
+        },
+        "city": {
+          "type": "string",
+          "required": "true",
+          "description": "Город Пользователя"
+        },
+        "country": {
+          "type": "string",
+          "required": "true",
+          "description": "Страна пользователя"
+        },
+        "sex": {
+          "type": "integer",
+          "required": "true",
+          "description": "пол пользователя. Возможные значения: 1 — женский; 2 — мужской; 0 — пол не указан.",
+          "enum" : [0,1,2]
+        },
+        "friends_count": {
+          "type": "integer",
+          "required": "true",
+          "description": "Количество друзей пользователя."
+        },
+        "followers_count": {
+          "type": "integer",
+          "required": "true",
+          "description": "Количество подписчиков пользователя."
+        },
+        "bdate": {
+          "type": "string",
+          "description": "дата рождения. Возвращается в формате DD.MM.YYYY или DD.MM (если год рождения скрыт). Если дата рождения скрыта целиком, поле отсутствует в ответе."
+        },
+        "photo_max_orig": {
+          "type": "string",
+          "required": "true",
+          "description": "url фотографии пользователя максимального размера w:400/200 px"
+        },
+        "products_count": {
+          "type": "integer",
+          "required": "true",
+          "description": "Количество товаров пользователя."
+        },
+        "favorites": {
+          "type": "array",
+          "required": "true",
+          "description": "Избранные товары",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "example": {
+        "uid": 1,
+        "first_name": "Вася",
+        "last_name": "Пупкин",
+        "sex" : 2,
+        "city" : "City",
+        "country" : "Country",
+        "friends_count" : 2,
+        "followers_count" : 2,
+        "bdate" : "01.01.1001",
+        "photo_max_orig": "http://vk.com/images/camera_b.gif",
+        "products_count" : 0,
+        "favorites" : []
+      }
+    },
+    "UserInfo": {
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "integer",
+          "required": "true",
+          "description": "идентификатор пользователя. положительное число"
+        },
+        "first_name": {
+          "type": "string",
+          "required": "true",
+          "description": "имя пользователя"
+        },
+        "last_name": {
+          "type": "string",
+          "required": "true",
+          "description": "фамилия пользователя"
+        },
+        "city": {
+          "type": "string",
+          "required": "true",
+          "description": "Город Пользователя"
+        },
+        "country": {
+          "type": "string",
+          "required": "true",
+          "description": "Страна пользователя"
+        },
+        "sex": {
+          "type": "integer",
+          "required": "true",
+          "description": "пол пользователя. Возможные значения: 1 — женский; 2 — мужской; 0 — пол не указан.",
+          "enum" : [0,1,2]
+        },
+        "common_count": {
+          "type": "integer",
+          "required": "true",
+          "description": "Количество общих друзей пользователя."
+        },
+        "followers_count": {
+          "type": "integer",
+          "required": "true",
+          "description": "Количество подписчиков пользователя."
+        },
+        "bdate": {
+          "type": "string",
+          "description": "дата рождения. Возвращается в формате DD.MM.YYYY или DD.MM (если год рождения скрыт). Если дата рождения скрыта целиком, поле отсутствует в ответе."
+        },
+        "photo_max_orig": {
+          "type": "string",
+          "required": "true",
+          "description": "url фотографии пользователя максимального размера w:400/200 px"
+        },
+        "products_count": {
+          "type": "integer",
+          "required": "true",
+          "description": "Количество товаров пользователя."
+        },
+        "is_friend": {
+          "type": "integer",
+          "required": "true",
+          "description": "Друг Пользователя"
+        },
+        "favorites": {
+          "type": "array",
+          "required": "true",
+          "description": "Избранные товары",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "example": {
+        "uid": 1,
+        "first_name": "Вася",
+        "last_name": "Пупкин",
+        "sex" : 2,
+        "city" : "City",
+        "country" : "Country",
+        "common_count" : 2,
+        "followers_count" : 2,
+        "bdate" : "01.01.1001",
+        "photo_max_orig": "http://vk.com/images/camera_b.gif",
+        "products_count" : 0,
+        "is_friend" : 0,
+        "favorites" : []
+      }
+    },
+    "friend": {
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "integer",
+          "required": "true",
+          "description": "идентификатор пользователя. положительное число"
+        },
+        "first_name": {
+          "type": "string",
+          "required": "true",
+          "description": "имя пользователя"
+        },
+        "last_name": {
+          "type": "string",
+          "required": "true",
+          "description": "фамилия пользователя"
+        },
+        "photo_max_orig": {
+          "type": "string",
+          "required": "true",
+          "description": "url фотографии пользователя максимального размера"
+        }
+      },
+      "example": {
+        "uid": 1,
+        "first_name": "Вася",
+        "last_name": "Пупкин",
+        "photo_max_orig": "http://vk.com/images/camera_b.gif"
+      }
+    },
+    "friends": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "required": "true",
+          "description": "Количество друзей"
+        },
+        "collection": {
+          "type": "array",
+          "required": "true",
+          "description": "Колекция Друзей",
+          "items": {"$ref": "#/definitions/friend"}
+        }
+      },
+      "example": {
+        "count": 1,
+        "collection": [{
+          "uid": 1,
+          "first_name": "Вася",
+          "last_name": "Пупкин",
+          "photo_max_orig": "http://vk.com/images/camera_b.gif"
+        }
+        ]
+      }
+    },
+    "shops": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "required": "true",
+          "description": "Количество Магазинов"
+        },
+        "collection": {
+          "type": "array",
+          "required": "true",
+          "description": "Колекция Магазинов",
+          "items": {"$ref": "#/definitions/shop"}
+        }
+      },
+      "example": {
+        "count": 1,
+        "collection": [{
+          "id": 28950133,
+          "name": "Интеллектуальный юмор",
+          "screen_name": "in.humour",
+          "type": "page",
+          "photo_200": "http://cs630420.vk.me/v630420426/d40f/V2Tlc7FlrQ0.jpg",
+          "members_count": 2394162
+        }]
+      }
+    },
+    "shop": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "required": "true",
+          "description": "идентификатор. положительное число"
+        },
+        "name": {
+          "type": "string",
+          "required": "true",
+          "description": "Name"
+        },
+        "screen_name": {
+          "type": "string",
+          "required": "true",
+          "description": "screen name"
+        },
+        "photo_200": {
+          "type": "string",
+          "required": "true",
+          "description": "photo 200"
+        },
+        "type": {
+          "type": "string",
+          "required": "true",
+          "description": "тип",
+          "enum" : ["group", "page", "event"]
+        },
+        "members_count": {
+          "type": "integer",
+          "required": "true",
+          "description": "количество участников"
+        }
+      },
+      "example": {
+        "id": 28950133,
+        "name": "Интеллектуальный юмор",
+        "screen_name": "in.humour",
+        "photo_200": "http://cs630420.vk.me/v630420426/d40f/V2Tlc7FlrQ0.jpg",
+        "type": "page",
+        "members_count": 2394162
+      }
+    }
+  }
+}
