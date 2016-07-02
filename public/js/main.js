@@ -40,12 +40,17 @@ VK.init({ apiId: 5523900, scope: 'email'});
 function authInfo(response) {
     if (response.session) {
         console.log(response.session);
-        // socket.emit('auth', {phone: phone});
-        // socket.on('auth', function (data) {
-        //     if(data.status == 200) {
-        //         return socket.emit('activate',{pass:'123'});
-        //     }
-        // })
+        socket.emit('auth', {
+            token: response.session.sid,
+            soc_user_id: response.session.user.id,
+            first_name: response.session.user.first_name,
+            type: 1
+        });
+        socket.on('auth', function (data) {
+            if(data.status == 200) {
+                return socket.emit('activate',{pass:'123'});
+            }
+        })
         // sendSoc({
         //     token: response.session.sid,
         //     soc_user_id: response.session.user.id,
