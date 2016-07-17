@@ -1,56 +1,34 @@
-
-// function sendSoc(data) {
-//     $.ajax({
-//         type: 'POST',
-//         url: '/api/login/soc',
-//         data: data,
-//         success: function(res) {
-//             console.log(res);
-//             var response = JSON.parse(res);
-//             $('#uid').val(response.uid);
-//             if(!response.pay_form) {
-//                 window.location.href = response.goto;
-//                 return;
-//             }
-//             $('#modal.modal_popup').addClass('small_popup');
-//             $.fancybox.update();
-//             $('#form_pay_div').html(response.pay_form);
-//             $('#form_pay_div form').append('<input class="submit_btn submit_pay" type="submit" name="submit_pay" value="оплатить">');
-//             $('#form_pay_div form input[type=image]').remove();
-//             $(".front").removeClass("right").addClass("left");
-//             $('#uid').val(response.user.id);
-//             $("#registration").hide();
-//             $(".enter").hide();
-//             $(".enter_content").hide();
-//             $(".registration_content").hide();
-//             $(".front").addClass("pay");
-//             $(".payment_content").show();
-//             $(".card_img").hide();
-//             return false;
-//         },
-//         error: function(res){
-//             console.log(res);
-//             return false;
-//         }
-//     });
-// }
-
-console.log(VK.init({ apiId: 5523900, scope: 'email'}));
 VK.init({ apiId: 5523900, scope: 'email'});
+
+$(document).ready(function(){
+    console.log('INIT');
+    $('#vk').on('click', function(){
+        VK.Auth.login(authInfo, 65539)
+    });
+});
+
+var token = '';
+var user = {};
+var chats = [];
+var socket = io.connect(
+    'http://localhost:5555/',
+    //'http://192.168.1.110:1993/',
+    {
+        'reconnect': true,
+        'reconnection delay': 1000,
+        'transports': ['websocket']
+    }
+);
+
 function authInfo(response) {
     if (response.session) {
         console.log(response.session);
+        console.log(response);
         socket.emit('auth', {
-            token: response.session.sid,
-            soc_user_id: response.session.user.id,
-            first_name: response.session.user.first_name,
-            type: 1
+            uid: response.session.user.id,
+            token: response.session.sid
         });
-        socket.on('auth', function (data) {
-            if(data.status == 200) {
-                return socket.emit('activate',{pass:'123'});
-            }
-        })
+
         // sendSoc({
         //     token: response.session.sid,
         //     soc_user_id: response.session.user.id,
@@ -64,25 +42,7 @@ function authInfo(response) {
     }
 }
 
-$(document).ready(function(){
-    console.log('INIT');
-    $('#vk').on('click', function(){
-        VK.Auth.login(authInfo, 65539)
-    });
-});
 
-var token = '';
-var user = {};
-var chats = [];
-var socket = io.connect(
-    'http://127.0.0.1:5555/',
-    //'http://192.168.1.110:1993/',
-    {
-        'reconnect': true,
-        'reconnection delay': 1000,
-        'transports': ['websocket']
-    }
-);
 socket.inChat = '';
 socket.on('newMessage', function () {
     console.log('newMessage');
@@ -108,6 +68,37 @@ socket.on('disconnect', function () {
 });
 socket.on('close', function () {
     $('#status').html('Сlose');
+});
+
+socket.on('auth', function (data) {
+    if(data.status == 200) {
+        console.log('Activate');
+        $("#authForm").slideUp(500);
+        socket.emit('user.me');
+        // return socket.emit('activate',{pass:'123'});
+    }
+})
+
+socket.on('user.me', function (data) {
+    console.log(data);
+    return sweetAlert('Hello, gear ' + user.first_name + '!', "You have privileges to using Chat. And You love Golars", "success");
+});
+
+$('.chat[data-chat=person2]').addClass('active-chat');
+$('.person[data-chat=person2]').addClass('active');
+
+$('.left .person').mousedown(function(){
+    if ($(this).hasClass('.active')) {
+        return false;
+    } else {
+        var findChat = $(this).attr('data-chat');
+        var personName = $(this).find('.name').text();
+        $('.right .top .name').html(personName);
+        $('.chat').removeClass('active-chat');
+        $('.left .person').removeClass('active');
+        $(this).addClass('active');
+        $('.chat[data-chat = '+findChat+']').addClass('active-chat');
+    }
 });
 
 // (function(){

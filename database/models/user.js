@@ -11,6 +11,12 @@ var SEX = {
     MAN         : 2
 };
 
+var STATUS = {
+    NOT_ACTIVE : 0,
+    ACTIVE     : 1,
+    DELETE     : 2
+};
+
 var schema = new Schema({
     uid: {
         required: true,
@@ -18,17 +24,14 @@ var schema = new Schema({
         type: Number
     },
     token: {
-        type: String
+        type: String,
+        required: true
     },
     first_name: {
         required: true,
         type: String
     },
     last_name: {
-        required: true,
-        type: String
-    },
-    email: {
         required: true,
         type: String
     },
@@ -39,10 +42,6 @@ var schema = new Schema({
             return (bdate) ? bdate : '';
         },
         default: ''
-    },
-    deactivated: {
-        type: Number,
-        default: 0
     },
     city_id: {
         type: Number,
@@ -69,6 +68,10 @@ var schema = new Schema({
         type: Number,
         default: SEX.ALIEN
     },
+    status: {
+        type: Number,
+        default: STATUS.ACTIVE
+    },
     dt_create: {
         type: Date,
         default: Date.now
@@ -78,11 +81,6 @@ var schema = new Schema({
         default: Date.now
     }
 });
-
-schema.path('email').validate(function (email) {
-    var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    return re.test(email);
-}, 'The e-mail field cannot be empty.')
 
 schema.methods.getShortInfo = function() {
     return {
@@ -135,23 +133,20 @@ schema.statics.authorize = function(data, callback) {
         user.token = data.token;
         user.uid = data.uid;
 
-        if(!user.email && user.email != data.email){
-            user.email = data.email;
-        }
-
         user.dt_last_connect = new Date();
         Service.getVkUserData(user, function(arg){
-            user.updateVkData(arg, callback);
+            user.updateVkData(arg, user, callback);
         })
     });
 };
 
-schema.methods.updateVkData = function(data, callback) {
-    var user = this;
+schema.methods.updateVkData = function(data, user, callback) {
     if(data.response[0].last_name == undefined) {
         return callback('Token is not valid. VK Data is empty');
     }
     var vkData = data.response[0];
+    console.log(vkData.id, user.uid);
+    
     user.last_name = vkData.last_name;
     user.first_name = vkData.first_name;
     user.bdate = vkData.bdate;
@@ -159,10 +154,6 @@ schema.methods.updateVkData = function(data, callback) {
     user.deactivated = vkData.deactivated;
     user.friends_count = vkData.followers_count || 0;
     user.followers_count = vkData.common_count || 0;
-
-    if(vkData.id != user.uid){
-        user.uid = vkData.id;
-    }
 
     if(vkData.has_photo) {
         user.photo_max_orig = (vkData.photo_400_orig) ? vkData.photo_400_orig : vkData.photo_max;
@@ -175,6 +166,7 @@ schema.methods.updateVkData = function(data, callback) {
     if(vkData.country != undefined) {
         user.country_id = vkData.country.id
     }
+    console.log(user);
     user.save(function(err, model) {
         if (err) return callback(err);
         callback(null, model);

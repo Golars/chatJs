@@ -31,10 +31,11 @@ module.exports = function(io) {
         });
 
         socket.on('auth', function(data){
-            if(data.uid == undefined || data.token == undefined || data.email == undefined) {
+            if(data.uid == undefined || data.token == undefined) {
                 return socket.sendError('auth', 403, 'Data is invalid');
             }
 
+            console.log(data);
             User.authorize(data, function (err, user) {
                 if (err) {
                     return socket.sendError('auth', 400, err, err);
@@ -44,7 +45,7 @@ module.exports = function(io) {
                 socket.user = user;
                 socket.activeUserSocket();
 
-                return socket.sendResponse('auth', {birka_token : socket.user.id});
+                return socket.sendResponse('auth', {token : user.id});
             });
         });
 
